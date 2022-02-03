@@ -24,7 +24,7 @@ knitr::opts_knit$set(root.dir='..')
 ```{r dataread, warning=F,message=F}
 ####-----Reading in Data and Stacking it ----- ####
 #Reading in files
-files <- list.files('../data',full.names=T)
+files <- list.files('data',full.names=T)
 
 
 #Read in individual data files
@@ -57,8 +57,13 @@ full_long <- rbind(ndvi,ndmi,ndsi) %>%
 
 # another way to do the na on all but the date is to do filter_if(is.numeric, all_vars(!is.na(.)))
 
-# Convert to wide
-full_wide <- full_long %>%
+# Convert full_long dataset to wide format
+full_wide<-spread(full_long,data,value)%>%
+  mutate(month=month(DateTime),
+         year = year(DateTime))
+
+# Convert to wide with modern
+full_wide2 <- full_long %>%
   pivot_wider(names_from = data, values_from=value) %>% # determines observation name and value columns
   mutate(year=year(DateTime)) %>%
   mutate(month=month(DateTime)) 
@@ -124,7 +129,9 @@ You should exclude winter months and focus on summer months
 ```{r, warning = FALSE, message=F}
 
 #ggplot of wide set in summer
-ggplot(data = full_widesummer, aes(x=ndmi,y=ndvi, color=treatment)) + 
+full_wide %>%
+  filter(month %in% c(6,7,8,9,10)) %>%
+ggplot(., aes(x=ndmi,y=ndvi, color=treatment)) + 
   geom_point(shape=1) + 
   xlab("NDMI") + ylab("NDVI") +
   ggtitle("Burned and Unburned") +
