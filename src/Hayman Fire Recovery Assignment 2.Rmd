@@ -1,11 +1,14 @@
 ---
 title: "Hayman Fire Recovery"
-author: "Matthew Ross"
-date: "10/3/2019"
+author: "Kaydee Barker"
+date: "1/31/2022"
 output: html_document
 ---
 
 ```{r setup, warning=F,message=F}
+
+rm(list=ls()) #clear global environment/workspace
+
 library(tidyverse)
 library(tidyr)
 library(ggthemes)
@@ -29,35 +32,107 @@ ndmi <- read_csv(files[1]) %>%
   rename(burned=2,unburned=3) %>%
   mutate(data='ndmi')
 
-
 ndsi <- read_csv(files[2]) %>% 
   rename(burned=2,unburned=3) %>%
   mutate(data='ndsi')
+
+# Winter only ndsi
+ndsi_win <- ndsi %>%
+  mutate(month=month(DateTime)) %>%
+  filter(month %in% c(11,12,1,2,3,4,5))
 
 ndvi <- read_csv(files[3])%>% 
   rename(burned=2,unburned=3) %>%
   mutate(data='ndvi')
 
+# Summer only ndvi
+ndvi_sum <- ndvi %>%
+  mutate(month=month(DateTime)) %>%
+  filter(month %in% c(6,7,8,9,10))
+
 # Stack as a tidy dataset
 full_long <- rbind(ndvi,ndmi,ndsi) %>%
-  gather(key='site',value='value',-DateTime,-data) %>%
+  gather(key='treatment',value='value',-DateTime,-data) %>%
   filter(!is.na(value))
 
+# another way to do the na on all but the date is to do filter_if(is.numeric, all_vars(!is.na(.)))
+
+# Convert to wide
+full_wide <- full_long %>%
+  pivot_wider(names_from = data, values_from=value) %>% # determines observation name and value columns
+  mutate(year=year(DateTime)) %>%
+  mutate(month=month(DateTime)) 
+
+# Filter out summer on full wide
+full_widesummer <- full_wide %>%
+  filter(month %in% c(6,7,8,9,10)) 
+
+# Remake sets with winter ndsi/summer ndvi
+wintersummer <- rbind(ndvi_sum, ndsi_win) %>%
+  gather(key='treatment',value='value',-DateTime,-data) %>%
+  filter(!is.na(value))
+
+# Wide summer/winter
+ws_wide <- wintersummer %>%
+  pivot_wider(names_from = data, values_from=value) %>% # determines observation name and value columns
+  mutate(year=year(DateTime)) %>%
+  mutate(month=month(DateTime)) 
+
+# Make annual dataset, make averages of only summer season
+annual <- full_long %>%
+  mutate(year=year(DateTime)) %>%
+  mutate(month=month(DateTime)) %>%
+  filter(month %in% c(5,6,7,8,9)) %>%
+  group_by(treatment,year) %>%
+  summarise(mean=mean(value))
+
+```
+
+```{r, warning = FALSE, message=F}
+
+#ggplot of full dataset
+ggplot(data = full_long, aes(x=DateTime,y=value, color=treatment)) + 
+  geom_point(shape=1) + 
+  geom_line() +
+  xlab("Date") + ylab(expression(paste("NDVI"))) +
+  ggtitle("Burned and Unburned") +
+  theme_few(base_size = 16) +
+  scale_color_brewer(palette = "Accent") +
+  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
+
+#ggplot of annual means
+ggplot(data = annual, aes(x=year,y=mean, color=treatment)) + 
+  geom_point(shape=1) + 
+  geom_line() +
+  xlab("Date") + ylab(expression(paste("NDVI"))) +
+  ggtitle("Burned and Unburned") +
+  theme_few(base_size = 16) +
+  scale_color_brewer(palette = "Accent") +
+  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
 
 ```
 
 
-
-
-## Question 1) 
+## Question 1
 
 What is the correlation between NDVI and NDMI? - here I want you to
 convert the full_long dataset in to a wide dataset using the 
-function "spread" and then make a plot that shows the correlation s a
+function "spread" and then make a plot that shows the correlation as a
 function of if the site was burned or not (x axis should be ndmi)
 You should exclude winter months and focus on summer months
 
+```{r, warning = FALSE, message=F}
 
+#ggplot of wide set in summer
+ggplot(data = full_widesummer, aes(x=ndmi,y=ndvi, color=treatment)) + 
+  geom_point(shape=1) + 
+  xlab("NDMI") + ylab("NDVI") +
+  ggtitle("Burned and Unburned") +
+  theme_few(base_size = 16) +
+  scale_color_brewer(palette = "Accent") +
+  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
+
+```
 
 ## Question 2 
 
@@ -66,29 +141,55 @@ You should exclude winter months and focus on summer months
 In other words, does the previous year's snow cover influence vegetation
  growth for the following summer?
 
+```{r, warning = FALSE, message=F}
+
+#ggplot winter NDSI to summer NDVI
+ggplot(data = full_wide, aes(x=ndsi,y=ndvi, color=treatment)) + 
+  geom_point(shape=1) + 
+  xlab("NDSI") + ylab("NDVI") +
+  ggtitle("Burned and Unburned") +
+  theme_few(base_size = 16) +
+  scale_color_brewer(palette = "Accent") +
+  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
+
+```
 
 ## Q3
 
 How is the snow effect from question 2 different between pre- and post-burn
 and burned and unburned? 
 
+```{r, warning = FALSE, message=F}
+
+
+
+```
 
 ## Question 4
 
 What month is the greenest month on average? 
 
+```{r, warning = FALSE, message=F}
 
+
+
+```
 
 
 ## Question 5) 
 
 What month is the snowiest on average?
 
+```{r, warning = FALSE, message=F}
+
+
+
+```
 
 ## Bonus Question: Redo all problems with `spread` and `gather` using modern tidyverse syntax. 
 
 
-## Bonus Question: Use Climage Engine to pull the same data for the assignment, but updated with 2020/2021 data.
+## Bonus Question: Use Climate Engine to pull the same data for the assignment, but updated with 2020/2021 data.
 
 
 
