@@ -3,6 +3,13 @@ title: "Hayman Fire Recovery"
 author: "Kaydee Barker"
 date: "1/31/2022"
 output: html_document
+knit: (function(input, ...) {
+    rmarkdown::render(
+      input,
+      output_file = 'index',
+      output_dir='../'
+    )
+  })
 ---
 
 ```{r setup, warning=F,message=F}
@@ -15,6 +22,7 @@ library(ggthemes)
 library(lubridate)
 
 knitr::opts_knit$set(root.dir='..')
+
 ```
 
 
