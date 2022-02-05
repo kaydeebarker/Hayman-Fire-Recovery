@@ -49,24 +49,23 @@ full_wide<-spread(full_long,data,value)%>%
   mutate(month=month(DateTime),
          year = year(DateTime))
 
-# Convert to wide with modern
+# Convert to wide with modern syntax, add pre and post burn
 full_wide2 <- full_long %>%
   pivot_wider(names_from = data, values_from=value) %>% # determines observation name and value columns
   mutate(year=year(DateTime)) %>%
-  mutate(month=month(DateTime)) 
+  mutate(month=month(DateTime)) %>%
+  mutate(status = if_else(year < 2002, "pre-burn", "post-burn"))
 
 # Winter only ndsi
-ndsi_win <- full_wide %>% 
-  mutate(year=year(DateTime)) %>%
+ndsi_win <- full_wide2 %>% 
   filter(month %in% c(11,12,1,2,3,4)) %>% 
-  group_by(year) %>%
+  group_by(year, treatment) %>%
   summarize(mean_NDSI=mean(ndsi))
 
 # Summer only ndvi
-ndvi_sum <- full_wide %>% 
-  mutate(year=year(DateTime)) %>%
+ndvi_sum <- full_wide2 %>% 
   filter(month %in% c(6,7,8,9)) %>% 
-  group_by(year) %>%
+  group_by(year, treatment) %>%
   summarize(mean_NDVI=mean(ndvi))
 
 # Make annual dataset, make averages of only summer season
@@ -77,9 +76,10 @@ annual <- full_long %>%
   group_by(treatment,year) %>%
   summarise(mean=mean(value))
   
-#Join NDVI and NDSI data together
-ndvi_ndsi <- inner_join(ndvi_sum, ndsi_win, by = c("year")) %>%
-  filter(!is.na(.))
+# Join NDVI and NDSI data together
+ndvi_ndsi <- inner_join(ndvi_sum, ndsi_win, by = c("year", "treatment")) %>%
+  mutate(Status = if_else(year < 2002, "pre-burn", "post-burn")) 
+
 
 ```
 
@@ -133,7 +133,7 @@ ggplot(., aes(x=ndmi,y=ndvi, color=treatment)) +
 
 ## Question 2 
 
-2) What is the correlation between average NDSI (normalized
+What is the correlation between average NDSI (normalized
  snow index) for January - April and average NDVI for June-August?
 In other words, does the previous year's snow cover influence vegetation
  growth for the following summer?
@@ -151,8 +151,8 @@ ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI)) +
               color = "black",
               fill = "lightgrey",
               size = 1) +
-  xlab("NDSI") + ylab("NDVI") +
-  ggtitle("Burned and Unburned") +
+  xlab("Mean NDSI") + ylab("Mean NDVI") +
+  ggtitle("Winter NDSI vs. Summer NDVI") +
   theme_few(base_size = 16) +
   scale_y_continuous(breaks = pretty(c(-0.4,0.5), n = 4)) +
   scale_x_continuous(breaks = pretty(c(0.2,0.5), n = 6)) +
@@ -165,9 +165,24 @@ ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI)) +
 How is the snow effect from question 2 different between pre- and post-burn
 and burned and unburned? 
 
-```{r, warning = FALSE, message=F}
+```{r, warning = FALSE, message=F, fig.height= 6, fig.width= 5, fig.align='center'}
 
+par(mfrow=c(2,1)) # put graphs side by side
 
+ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI, color = treatment)) +
+  geom_point(shape = 21, 
+             size = 2) +
+  geom_smooth(method = "lm",
+              se = TRUE,
+              lty = 1,
+              color = "black",
+              size = 1) +
+  xlab("Mean NDSI") + ylab("Mean NDVI") +
+  ggtitle("NDSI vs. NDVI in Burned and Unburned Plots") +
+  theme_few(base_size = 16) +
+  scale_y_continuous(breaks = pretty(c(-0.4,0.5), n = 4)) +
+  scale_x_continuous(breaks = pretty(c(0.2,0.5), n = 6)) +
+  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
 
 ```
 
