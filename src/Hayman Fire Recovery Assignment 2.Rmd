@@ -14,9 +14,6 @@ library(tidyr)
 library(ggthemes)
 library(lubridate)
 
-# Now that we have learned how to munge (manipulate) data
-# and plot it, we will work on using these skills in new ways
-
 knitr::opts_knit$set(root.dir='..')
 ```
 
@@ -129,7 +126,7 @@ ggplot(., aes(x=ndmi,y=ndvi, color=treatment)) +
   xlab("NDMI") + ylab("NDVI") +
   ggtitle("Burned and Unburned") +
   theme_few(base_size = 16) +
-  scale_color_brewer(palette = "Accent") +
+  scale_color_brewer(palette = "Set2") +
   theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
 
 ```
@@ -141,20 +138,29 @@ ggplot(., aes(x=ndmi,y=ndvi, color=treatment)) +
 In other words, does the previous year's snow cover influence vegetation
  growth for the following summer?
 
-```{r, warning = FALSE, message=F}
+```{r, warning = FALSE, message=F, fig.height= 6, fig.width= 5, fig.align='center'}
 
 #ggplot winter NDSI to summer NDVI
-ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI, color = year))+
-  geom_point(shape=1) + 
+ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI)) +
+  geom_point(fill = "blue", 
+             shape = 21, 
+             size = 2) +
+  geom_smooth(method = "lm",
+              se = TRUE,
+              lty = 1,
+              color = "black",
+              fill = "lightgrey",
+              size = 1) +
   xlab("NDSI") + ylab("NDVI") +
   ggtitle("Burned and Unburned") +
   theme_few(base_size = 16) +
+  scale_y_continuous(breaks = pretty(c(-0.4,0.5), n = 4)) +
+  scale_x_continuous(breaks = pretty(c(0.2,0.5), n = 6)) +
   theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
-
 
 ```
 
-## Q3
+## Question 3
 
 How is the snow effect from question 2 different between pre- and post-burn
 and burned and unburned? 
