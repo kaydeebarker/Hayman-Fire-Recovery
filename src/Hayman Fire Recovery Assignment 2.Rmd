@@ -78,7 +78,7 @@ annual <- full_long %>%
   
 # Join NDVI and NDSI data together
 ndvi_ndsi <- inner_join(ndvi_sum, ndsi_win, by = c("year", "treatment")) %>%
-  mutate(Status = if_else(year < 2002, "pre-burn", "post-burn")) 
+  mutate(status = if_else(year < 2002, "pre-burn", "post-burn")) 
 
 
 ```
@@ -167,16 +167,23 @@ and burned and unburned?
 
 ```{r, warning = FALSE, message=F, fig.height= 6, fig.width= 5, fig.align='center'}
 
-par(mfrow=c(2,1)) # put graphs side by side
+par(mfrow=c(1,2)) # put graphs side by side
+
+ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI, color = status)) +
+  geom_point(shape = 21, 
+             size = 2) +
+  geom_smooth(method = "lm", se =FALSE, lty = 1, aes(color = status, linetype = status)) +
+  xlab("Mean NDSI") + ylab("Mean NDVI") +
+  ggtitle("NDSI vs. NDVI Pre- and Post-Burn") +
+  theme_few(base_size = 16) +
+  scale_y_continuous(breaks = pretty(c(-0.4,0.5), n = 4)) +
+  scale_x_continuous(breaks = pretty(c(0.2,0.5), n = 6)) +
+  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
 
 ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI, color = treatment)) +
   geom_point(shape = 21, 
              size = 2) +
-  geom_smooth(method = "lm",
-              se = TRUE,
-              lty = 1,
-              color = "black",
-              size = 1) +
+  geom_smooth(method = "lm", se =FALSE, lty = 1, aes(color = treatment, linetype = treatment)) +
   xlab("Mean NDSI") + ylab("Mean NDVI") +
   ggtitle("NDSI vs. NDVI in Burned and Unburned Plots") +
   theme_few(base_size = 16) +
