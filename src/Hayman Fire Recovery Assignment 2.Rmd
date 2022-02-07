@@ -185,13 +185,13 @@ What month is the greenest month on average?
 #ggplot of monthly means
 monthly %>%
   filter(data == "ndvi") %>%
-ggplot(., aes(x=month,y=mean)) + 
-  geom_point(fill = "green", shape = 21, size = 2) +
-  geom_line() +
+  mutate_at(vars(month), funs(factor)) %>%
+ggplot(., aes(x=month,y=mean, fill=month)) + 
+  geom_bar(stat = "identity", position = "dodge") +
   scale_x_discrete(labels=c("5"="May", "6"="June", "7"="Jul.", "8"="Aug.", "9"="Sept.")) +
-  xlab("Month") + ylab(expression(paste("NDVI"))) +
+  xlab("Month") +  ylab("NDVI") +
   ggtitle("Average NDVI per Month") +
-  scale_color_brewer(palette = "Accent") +
+  theme_few() +
   theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
 
 ```
