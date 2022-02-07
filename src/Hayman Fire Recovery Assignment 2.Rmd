@@ -4,7 +4,7 @@ author: "Kaydee Barker"
 date: "1/31/2022"
 output:
   html_document: default
-  pdf_document: default
+
 ---
 
 ```{r setup, warning=FALSE, echo=FALSE, message=FALSE}
