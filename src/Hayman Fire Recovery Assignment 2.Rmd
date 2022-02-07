@@ -50,7 +50,7 @@ full_long <- rbind(ndvi,ndmi,ndsi) %>%
 # another way to do the na on all but the date is to do filter_if(is.numeric, all_vars(!is.na(.)))
 
 # Convert full_long dataset to wide format
-full_wide<-spread(full_long,data,value)%>%
+full_wide<-spread(full_long,data,value) %>%
   mutate(month=month(DateTime),
          year = year(DateTime))
 
@@ -88,7 +88,7 @@ monthly_sum <- full_long %>%
 monthly_win <- full_long %>%
   mutate(year=year(DateTime)) %>%
   mutate(month=month(DateTime)) %>%
-  filter(month %in% c(11,12,1,2,3,4)) %>%
+  filter(month %in% c(11,12,1,2,3)) %>%
   group_by(data, month) %>%
   summarise_all(funs(mean(., na.rm=TRUE), sd(., na.rm=TRUE), std.error(., na.rm=TRUE)))
 
@@ -133,12 +133,9 @@ ggplot(., aes(x=ndmi,y=ndvi, color=treatment)) +
 
 Figure 1. NDVI and NDMI values from 2002 to 2019 in Colorado sites that were burned (teal) or left unburned (orange) during the Hayman Fire.
 
-## Question 2 
+## What is the correlation between average Normalized Difference Snow Index (NDSI) for January - April and average NDVI for June-August? 
 
-What is the correlation between average NDSI (normalized
- snow index) for January - April and average NDVI for June-August?
-In other words, does the previous year's snow cover influence vegetation
- growth for the following summer?
+As may be expected, vegetative growth (NDVI) is positively associated with the previous winter's snowfall, as shown in the plot below.
 
 ```{r, warning = FALSE, echo=FALSE, message=FALSE, fig.height= 6, fig.width= 5}
 
@@ -162,41 +159,54 @@ ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI)) +
 
 ```
 
-## Question 3
 
-How is the snow effect from question 2 different between pre- and post-burn
-and burned and unburned? 
+
+Figure 2. Linear model of the mean summer NDVI and mean winter snow index (NDSI), with the standard error in grey.
+
+
+## How is the snow effect different between pre- and post-burn and burned and unburned? 
+
+The plots below demonstrate how the Hayman Fire impacted the relationship between snowfall and vegetation.
 
 ```{r, warning = FALSE, echo=FALSE, message=FALSE, fig.height= 6, fig.width= 5}
 
-par(mfrow=c(1,2)) # put graphs side by side
+par(mfrow=c(2,2)) # put graphs side by side
 
 ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI, color = status)) +
   geom_point(shape = 21, size = 2) +
-  geom_smooth(method = "lm", se =FALSE, lty = 1, aes(color = status, linetype = status)) +
+  geom_smooth(method = "lm", se =FALSE, lty = 1, 
+              aes(color = status, linetype = status)) +
   xlab("Mean NDSI") + ylab("Mean NDVI") +
   ggtitle("NDSI vs. NDVI Pre- and Post-Burn") +
   theme_few(base_size = 16) +
   scale_y_continuous(breaks = pretty(c(-0.4,0.5), n = 4)) +
-  scale_x_continuous(breaks = pretty(c(0.2,0.5), n = 6)) +
-  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
+  scale_x_continuous(breaks = pretty(c(0,0.5), n = 5)) +
+  theme(panel.grid.major=element_blank(), 
+        panel.grid.minor=element_blank(), legend.position="bottom")
 
 ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI, color = treatment)) +
   geom_point(shape = 21, 
              size = 2) +
-  geom_smooth(method = "lm", se =FALSE, lty = 1, aes(color = treatment, linetype = treatment)) +
+  geom_smooth(method = "lm", se =FALSE, lty = 1, 
+              aes(color = treatment, linetype = treatment)) +
   xlab("Mean NDSI") + ylab("Mean NDVI") +
   ggtitle("NDSI vs. NDVI in Burned and Unburned Plots") +
   theme_few(base_size = 16) +
   scale_y_continuous(breaks = pretty(c(-0.4,0.5), n = 4)) +
-  scale_x_continuous(breaks = pretty(c(0.2,0.5), n = 6)) +
-  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
+  scale_x_continuous(breaks = pretty(c(0,0.5), n = 5)) +
+  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), 
+        legend.position="bottom")
 
 ```
 
-## Question 4
 
-What month is the greenest month on average? 
+Figures 3 and 4. Linear models for mean summer NDVI and mean winter NDSI for pre- and post-burn and burned and unburned sites.
+
+
+## What month is the greenest month on average? 
+
+If we plot monthly means of NDVI, we can see that the greenest month in Colorado is August.
+
 
 ```{r, warning = FALSE, echo=FALSE, message=FALSE}
 
@@ -207,49 +217,46 @@ monthly_sum %>%
 ggplot(., aes(x=month, y=value_mean, fill=month)) + 
   geom_bar(stat = "identity", width = 0.7, position = "dodge") +
   geom_errorbar(aes(ymin=value_mean-value_std.error, ymax=value_mean+value_std.error), 
-                colour = "darkgrey", width = 0.7, position = "dodge") +
+                colour = "black", width = 0.7, position = "dodge") +
   scale_x_discrete(labels=c("5"="May", "6"="June", "7"="Jul.", "8"="Aug.", "9"="Sept.")) +
   xlab("Month") +  ylab("NDVI") +
   ggtitle("Average NDVI per Month") +
   theme_few() +
-  scale_fill_brewer(palette = "Set2") +
+  scale_fill_brewer(palette = "Greens") +
   theme(panel.grid.major=element_blank(), 
         panel.grid.minor=element_blank(), legend.position="none")
 
 ```
 
 
-## Question 5) 
+Figure 5. Mean NDVI and standard error per summer month across sites from 1984 to 2019.
 
-What month is the snowiest on average?
+
+## What month is the snowiest on average?
+
+If we plot the NDSI means for the winter months, we can see that the highest snowfall is January.
 
 ```{r, warning = FALSE, echo=FALSE, message=FALSE}
 
 # Change ordering manually and make month into factor
 monthly_win$month <- factor(monthly_win$month,   
-                  levels = c("11","12", "1", "2", "3", "4"))
+                  levels = c("11","12", "1", "2", "3"))
 
 monthly_win %>%
   filter(data == "ndsi") %>%
 ggplot(., aes(x=month,y=value_mean, fill=month)) + 
   geom_bar(stat = "identity", width = 0.7, position = "dodge") +
   geom_errorbar(aes(ymin=value_mean-value_std.error, ymax=value_mean+value_std.error), 
-                colour = "darkgrey", width = 0.7, position = "dodge") +
+                colour = "black", width = 0.7, position = "dodge") +
   scale_x_discrete(labels=c("11"="Nov.", "12"="Dec", "1"="Jan.", "2"="Feb.", 
-                            "3"="Mar.", "4"="May")) +
+                            "3"="Mar.")) +
   xlab("Month") +  ylab("NDSI") +
   ggtitle("Average NDSI per Month") +
   theme_few() +
-  scale_fill_brewer(palette = "Set2") +
+  scale_fill_brewer(palette = "Purples") +
   theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), 
         legend.position="none")
 
 ```
 
-## Bonus Question
-
-Use Climate Engine to pull the same data for the assignment, but updated with 2020/2021 data.
-
-
-
-
+Figure 6. Mean NDSI and standard error per winter month across sites from 1984 to 2019.
