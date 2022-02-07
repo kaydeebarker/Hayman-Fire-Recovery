@@ -3,16 +3,10 @@ title: "Hayman Fire Recovery"
 author: "Kaydee Barker"
 date: "1/31/2022"
 output: html_document
-knit: (function(input, ...) {
-    rmarkdown::render(
-      input,
-      output_file = 'index',
-      output_dir='../'
-    )
-  })
+
 ---
 
-```{r setup, warning=F,message=F}
+```{r setup, warning=FALSE, echo=FALSE, message=FALSE}
 
 rm(list=ls()) #clear global environment/workspace
 
@@ -26,7 +20,7 @@ knitr::opts_knit$set(root.dir='..')
 ```
 
 
-```{r dataread, warning=F,message=F}
+```{r dataread, warning=FALSE, echo=FALSE, message=FALSE}
 ####-----Reading in Data and Stacking it ----- ####
 #Reading in files
 files <- list.files('data',full.names=T)
@@ -75,56 +69,38 @@ ndvi_sum <- full_wide2 %>%
   filter(month %in% c(6,7,8,9)) %>% 
   group_by(year, treatment) %>%
   summarize(mean_NDVI=mean(ndvi))
-
-# Make annual dataset, make averages of only summer season
-annual <- full_long %>%
-  mutate(year=year(DateTime)) %>%
-  mutate(month=month(DateTime)) %>%
-  filter(month %in% c(5,6,7,8,9)) %>%
-  group_by(treatment,year) %>%
-  summarise(mean=mean(value))
   
 # Join NDVI and NDSI data together
 ndvi_ndsi <- inner_join(ndvi_sum, ndsi_win, by = c("year", "treatment")) %>%
   mutate(status = if_else(year < 2002, "pre-burn", "post-burn")) 
 
+# Make monthly dataset, make averages of months, only summer season
+monthly <- full_long %>%
+  mutate(year=year(DateTime)) %>%
+  mutate(month=month(DateTime)) %>%
+  filter(month %in% c(5,6,7,8,9)) %>%
+  group_by(data, month) %>%
+  summarise(mean=mean(value))
 
 ```
 
-```{r, warning = FALSE, message=F}
+```{r, warning = FALSE, echo=FALSE}
 
 #ggplot of full dataset
-ggplot(data = full_long, aes(x=DateTime,y=value, color=treatment)) + 
-  geom_point(shape=1) + 
-  geom_line() +
-  xlab("Date") + ylab(expression(paste("NDVI"))) +
-  ggtitle("Burned and Unburned") +
-  theme_few(base_size = 16) +
-  scale_color_brewer(palette = "Accent") +
-  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
+#ggplot(data = full_long, aes(x=DateTime,y=value, color=treatment)) + 
+#  geom_point(shape=1) + geom_line() +  xlab("Date") + ylab(expression(paste("NDVI"))) +
+#  ggtitle("Burned and Unburned") +  theme_few(base_size = 16) +  scale_color_brewer(palette = "Accent") +
+#  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
 
-#ggplot of annual means
-ggplot(data = annual, aes(x=year,y=mean, color=treatment)) + 
-  geom_point(shape=1) + 
-  geom_line() +
-  xlab("Date") + ylab(expression(paste("NDVI"))) +
-  ggtitle("Burned and Unburned") +
-  theme_few(base_size = 16) +
-  scale_color_brewer(palette = "Accent") +
-  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
 
 ```
 
 
 ## Question 1
 
-What is the correlation between NDVI and NDMI? - here I want you to
-convert the full_long dataset in to a wide dataset using the 
-function "spread" and then make a plot that shows the correlation as a
-function of if the site was burned or not (x axis should be ndmi)
-You should exclude winter months and focus on summer months
+What is the correlation between NDVI and NDMI? 
 
-```{r, warning = FALSE, message=F}
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
 
 #ggplot of wide set in summer
 full_wide %>%
@@ -146,7 +122,7 @@ What is the correlation between average NDSI (normalized
 In other words, does the previous year's snow cover influence vegetation
  growth for the following summer?
 
-```{r, warning = FALSE, message=F, fig.height= 6, fig.width= 5, fig.align='center'}
+```{r, warning = FALSE, echo=FALSE, message=FALSE, fig.height= 6, fig.width= 5}
 
 #ggplot winter NDSI to summer NDVI
 ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI)) +
@@ -173,13 +149,12 @@ ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI)) +
 How is the snow effect from question 2 different between pre- and post-burn
 and burned and unburned? 
 
-```{r, warning = FALSE, message=F, fig.height= 6, fig.width= 5, fig.align='center'}
+```{r, warning = FALSE, echo=FALSE, message=FALSE, fig.height= 6, fig.width= 5}
 
 par(mfrow=c(1,2)) # put graphs side by side
 
 ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI, color = status)) +
-  geom_point(shape = 21, 
-             size = 2) +
+  geom_point(shape = 21, size = 2) +
   geom_smooth(method = "lm", se =FALSE, lty = 1, aes(color = status, linetype = status)) +
   xlab("Mean NDSI") + ylab("Mean NDVI") +
   ggtitle("NDSI vs. NDVI Pre- and Post-Burn") +
@@ -205,9 +180,19 @@ ggplot(ndvi_ndsi, aes(x = mean_NDVI, y = mean_NDSI, color = treatment)) +
 
 What month is the greenest month on average? 
 
-```{r, warning = FALSE, message=F}
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
 
-
+#ggplot of monthly means
+monthly %>%
+  filter(data == "ndvi") %>%
+ggplot(., aes(x=month,y=mean)) + 
+  geom_point(fill = "green", shape = 21, size = 2) +
+  geom_line() +
+  scale_x_discrete(labels=c("5"="May", "6"="June", "7"="Jul.", "8"="Aug.", "9"="Sept.")) +
+  xlab("Month") + ylab(expression(paste("NDVI"))) +
+  ggtitle("Average NDVI per Month") +
+  scale_color_brewer(palette = "Accent") +
+  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
 
 ```
 
@@ -216,7 +201,7 @@ What month is the greenest month on average?
 
 What month is the snowiest on average?
 
-```{r, warning = FALSE, message=F}
+```{r, warning = FALSE, echo=FALSE, message=FALSE}
 
 
 
