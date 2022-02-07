@@ -104,26 +104,34 @@ monthly_win <- full_long %>%
 
 
 ```
+## Introduction
 
+The Hayman Fire, started by arsen in summer of 2002, was the largest wildfire in Colorado history until the 2020 wildfire season. It burned a large area of over 138 thousand acres between the Kenosha Mountains and Pikes Peak, affecting wildlife and causing water quality concerns for the Front Range populations through damage to watersheds that contribute to the South Platte River.
 
-## Question 1
+## What is the correlation between NDVI and NDMI?
 
-What is the correlation between NDVI and NDMI? 
+The Normalized Difference Vegetation Index (NDVI) is positively correlated with the Normalized Difference Moisture Index (NDMI). In everyday terms, NDVI indicates plant health as shown by how well leaves reflect near infrared and red light, while NDMI represents plant water content and is calculated from near infrared and short-wave infrared reflectance values ([Agricolus, 2018](https://www.agricolus.com/en/vegetation-indices-ndvi-ndmi/)). These values can also tell us about how much vegetative cover there is at a given site, with the lowest NDVI (<0.1) and NDMI (<-0.8) values indicating bare soil.
+
+Not surprisingly, the plot below shows that canopy cover is greatly decreased for the burned site compared to the unburned site.
 
 ```{r, warning = FALSE, echo=FALSE, message=FALSE}
 
 #ggplot of wide set in summer
 full_wide %>%
   filter(month %in% c(6,7,8,9,10)) %>%
+  filter(year >= 2002) %>%
 ggplot(., aes(x=ndmi,y=ndvi, color=treatment)) + 
   geom_point(shape=1) + 
   xlab("NDMI") + ylab("NDVI") +
-  ggtitle("Burned and Unburned") +
+  ggtitle("Burned vs. Unburned Vegetation") +
   theme_few(base_size = 16) +
   scale_color_brewer(palette = "Set2") +
   theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
 
 ```
+
+
+Figure 1. NDVI and NDMI values from 2002 to 2019 in Colorado sites that were burned (teal) or left unburned (orange) during the Hayman Fire.
 
 ## Question 2 
 
