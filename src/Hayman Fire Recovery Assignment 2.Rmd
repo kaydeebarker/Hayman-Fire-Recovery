@@ -75,10 +75,17 @@ ndvi_ndsi <- inner_join(ndvi_sum, ndsi_win, by = c("year", "treatment")) %>%
   mutate(status = if_else(year < 2002, "pre-burn", "post-burn")) 
 
 # Make monthly dataset, make averages of months, only summer season
-monthly <- full_long %>%
+monthly_sum <- full_long %>%
   mutate(year=year(DateTime)) %>%
   mutate(month=month(DateTime)) %>%
   filter(month %in% c(5,6,7,8,9)) %>%
+  group_by(data, month) %>%
+  summarise(mean=mean(value))
+
+monthly_win <- full_long %>%
+  mutate(year=year(DateTime)) %>%
+  mutate(month=month(DateTime)) %>%
+  filter(month %in% c(11,12,1,2,3,4)) %>%
   group_by(data, month) %>%
   summarise(mean=mean(value))
 
@@ -183,7 +190,7 @@ What month is the greenest month on average?
 ```{r, warning = FALSE, echo=FALSE, message=FALSE}
 
 #ggplot of monthly means
-monthly %>%
+monthly_sum %>%
   filter(data == "ndvi") %>%
   mutate_at(vars(month), funs(factor)) %>%
 ggplot(., aes(x=month,y=mean, fill=month)) + 
@@ -192,7 +199,7 @@ ggplot(., aes(x=month,y=mean, fill=month)) +
   xlab("Month") +  ylab("NDVI") +
   ggtitle("Average NDVI per Month") +
   theme_few() +
-  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="bottom")
+  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="none")
 
 ```
 
@@ -203,14 +210,25 @@ What month is the snowiest on average?
 
 ```{r, warning = FALSE, echo=FALSE, message=FALSE}
 
+# Change ordering manually and make month into factor
+monthly_win$month <- factor(monthly_win$month,   
+                  levels = c("11","12", "1", "2", "3", "4"))
 
+monthly_win %>%
+  filter(data == "ndsi") %>%
+ggplot(., aes(x=month,y=mean, fill=month)) + 
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_x_discrete(labels=c("11"="Nov.", "12"="Dec", "1"="Jan.", "2"="Feb.", "3"="Mar.", "4"="May")) +
+  xlab("Month") +  ylab("NDSI") +
+  ggtitle("Average NDSI per Month") +
+  theme_few() +
+  theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.position="none")
 
 ```
 
-## Bonus Question: Redo all problems with `spread` and `gather` using modern tidyverse syntax. 
+## Bonus Question
 
-
-## Bonus Question: Use Climate Engine to pull the same data for the assignment, but updated with 2020/2021 data.
+Use Climate Engine to pull the same data for the assignment, but updated with 2020/2021 data.
 
 
 
